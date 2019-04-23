@@ -1,0 +1,24 @@
+.custom-chatlist {
+    height: 50%;
+    overflow-y: scroll;
+}
+.custom-conversation-q-card {
+    height: 560px;
+    min-width: 330px;
+    max-width: 450px;
+}
+.custom-q-card-header {
+    height: 65px;
+    display: block;
+}
+.custom-select-chat-mode {
+    width: 350px;
+    height: 250px;
+}
+.custom-button {
+    width: 100%;
+}
+.custom-button-admin{
+    width: 100%;
+    top: 85px;
+}

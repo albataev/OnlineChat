@@ -1,0 +1,21 @@
+{
+  "name": "websocketschat",
+  "version": "1.0.0",
+  "description": "Test task from SberTech",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node chatServer.js"
+  },
+  "keywords": [
+    "WebSockets",
+    "Chat",
+    "Vue.js"
+  ],
+  "author": "AlexB <albataev@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.16.4",
+    "express-ws": "^4.0.0"
+  }
+}
