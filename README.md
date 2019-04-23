@@ -10,6 +10,10 @@ Each client has its own chat.
 Administrator can personally answer for each one of them.
 Future plans are to implement it as a plugin on the website to provide better UI experience with interactive chat with site owners\admins\etc...
 
+Demo
+--------
+[Current version demo on Heroku](https://damp-reaches-19849.herokuapp.com/ "Heroku")
+
 Documentation
 =============
 
