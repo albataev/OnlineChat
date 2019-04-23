@@ -1,4 +1,4 @@
-WebSocket Client & Server Implementation for Node
+WebSocket Chat Implementation for Node
 =================================================
 
 
