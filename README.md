@@ -20,7 +20,7 @@ Documentation
 Changelog
 ---------
 
-***Current Version: 1.0.0*** — Released 2019-04-23
+***Current Version: 1.0.1*** — Released 2019-04-25
 
 Installation
 ------------

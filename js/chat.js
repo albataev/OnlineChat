@@ -123,7 +123,7 @@ Vue.component('main-page-data', {
                     >
                     <q-card-title v-if="chatModeSelected === 'admin'"> 
                     Id: {{ key }}</br>
-                    Имя: {{conversation.history[conversation.history.length - 1].split('&')[0]}}
+                    Имя: {{conversation.history[conversation.history.length - 1].userName}}
                     <q-card-separator />
                     </q-card-title>
                     <q-card-title v-if="chatModeSelected === 'user'" > 
@@ -133,10 +133,10 @@ Vue.component('main-page-data', {
                     <q-list class="custom-chatlist">
                         <q-chat-message
                             v-for="msg in conversation.history"
-                            :name="msg.split('&')[0]"
-                            :avatar="(msg.split('&')[0] === 'Admin') ? 'admin.png' : 'user.png'"
-                            :text="[msg.split('&')[1]]"
-                            :class="msg.split('&')[0] === userName ? 'q-message-sent' : ''"
+                            :name="msg.userName"
+                            :avatar="(msg.userName === 'Admin') ? 'admin.png' : 'user.png'"
+                            :text="[msg.messageText]"
+                            :class="msg.userName === userName ? 'q-message-sent' : ''"
                         />
                     </q-list>
                     <q-field          
@@ -185,9 +185,9 @@ Vue.component('main-page-data', {
             } else if (msgText.length > 120) {
                 this.messageFromChatWindowError = true;
                 this.messageFromChatWindowErrorLabel = 'Максимальная длина сообщения - 120 символов'
-            } else if (!/^[a-zA-Zа-яА-Я0-9 ]+$/.test(msgText) && msgText.replace(' ').length > 0) {
+            } else if (!/^[a-zA-Zа-яА-Я0-9 ?!.,_:;()-]+$/.test(msgText) && msgText.replace(' ').length > 0) {
                 this.messageFromChatWindowError = true;
-                this.messageFromChatWindowErrorLabel = 'Сообщение может содержать только буквы и цифры'
+                this.messageFromChatWindowErrorLabel = 'Сообщение может содержать буквы цифры и знаки препинания'
             } else {
                 this.messageFromChatWindowError = false;
                 conversation.currentMessage = msgText;
@@ -230,7 +230,7 @@ var app = new Vue({
 
     data: {
         adminName: 'Admin',
-        userName: '',
+        userName: undefined,
         chatColorPalette: {
             'noNewMessages': 'tertiary',
             'newMessages': 'teal'
@@ -247,45 +247,61 @@ var app = new Vue({
         const keepAliveTimeout = 10000;
         const ping = () => {
             console.log('Ping');
-            this.socket.readyState === this.socket.OPEN ?
-                this.socket.send('keepAlive') : null
+            if (this.socket.readyState === this.socket.OPEN) {
+                this.socket.send(JSON.stringify({
+                    "userName": app.userName || "ping",
+                    "messageText": "keepAlive"
+                }))
+            }
         };
         setInterval(ping, keepAliveTimeout);
 
         this.socket.onmessage = (event) => {
-            let [messageText, wsKey] = event.data.split('#');
+            const message = JSON.parse(event.data);
+            console.log('Received message: ', message);
             app.componentKey += 1; // force rerender in component
             // if chat in user mode, ws conn id needed for message text parsing
             // this iD get from first server message (tmp solution)
             // check whether 'wsIdForUSerSession' filled to prevent admin wsId rewriting
             if (app.chatModeSelected === 'user' && app.wsIdForUSerSession === '') {
-                app.wsIdForUSerSession = wsKey
-            }
-            // new chat object for the new user
-            if (app.conversations[wsKey] === undefined) {
-                app.conversations[wsKey] = {
+                app.wsIdForUSerSession = message.wsChatKey;
+                app.conversations[message.wsChatKey] = {
                     currentMessage: '',
                     messageFromChatWindowError: false,
                     messageFromChatWindowErrorLabel: '',
                     history: [],
                     chatColor: app.chatColorPalette.noNewMessages,
-                    sendMessage: () => app.sendMessage(wsKey)
+                    sendMessage: () => app.sendMessage(message.wsChatKey)
                 }
             }
-            app.conversations[wsKey].history.unshift(`${messageText}`);
+            // new chat object for the new user
+            if (app.chatModeSelected === 'admin' && app.conversations[message.wsChatKey] === undefined) {
+                app.conversations[message.wsChatKey] = {
+                    currentMessage: '',
+                    messageFromChatWindowError: false,
+                    messageFromChatWindowErrorLabel: '',
+                    history: [],
+                    chatColor: app.chatColorPalette.noNewMessages,
+                    sendMessage: () => app.sendMessage(message.wsChatKey)
+                }
+            }
+            app.conversations[message.wsChatKey].history.unshift(message);
             // highlight unanswered chat card, verify if chat exists for this ws key
-            if (app.conversations[wsKey] !== undefined &&
-                app.conversations[wsKey].history[0].split('&')[0] !== app.userName) {
-                app.conversations[wsKey].chatColor = app.chatColorPalette.newMessages
+            if (app.conversations[message.wsChatKey] !== undefined &&
+                app.conversations[message.wsChatKey].history[0].userName !== app.userName) {
+                app.conversations[message.wsChatKey].chatColor = app.chatColorPalette.newMessages
             } else {
-                app.conversations[wsKey].chatColor = app.chatColorPalette.noNewMessages;
+                app.conversations[message.wsChatKey].chatColor = app.chatColorPalette.noNewMessages;
             }
         };
     },
 
     methods: {
         setAdmin: () => {
-            this.socket.send('setAdmin');
+            this.socket.send(JSON.stringify({
+                "userName": "Admin",
+                "messageText": "setAdmin"
+            }));
             app.chatModeSelected = 'admin';
             app.userName = app.adminName;
             console.log('adminSet');
@@ -295,13 +311,19 @@ var app = new Vue({
             app.chatModeSelected = 'user';
             console.log('--> setUser. Name: ', app.userName);
             // init app.conversations with wsKey, sent back from server.
-            this.socket.send(`${app.userName}& -- Чат запущен --`);
-
+            this.socket.send(JSON.stringify({
+                "userName": app.userName,
+                "messageText": "Чат запущен"
+            }));
         },
         sendMessage: (toId = app.wsIdForUSerSession) => {
             // #${toId} using on server for admin messages routing
-            console.log('--> sending message: \n', `${app.userName}&${app.conversations[toId].currentMessage}#${toId}`);
-            this.socket.send(`${app.userName}&${app.conversations[toId].currentMessage}#${toId}`);
+            let message = JSON.stringify({
+                "userName": app.userName,
+                "messageText": app.conversations[toId].currentMessage,
+                "wsChatKey": toId});
+            console.log('--> sending message: ', message);
+            this.socket.send(message);
             app.conversations[toId].currentMessage = '';
         }
     }
