@@ -20,7 +20,9 @@ Documentation
 Changelog
 ---------
 
-***Current Version: 1.0.1*** — Released 2019-04-25
+***Current Version: 1.0.2*** — Released 2019-04-25
+
+Now using Quasar CLI, Webpack, Babel. Project is now compiling from sources
 
 Installation
 ------------
@@ -28,6 +30,8 @@ Installation
 Download or clone repository, then run:
 
     $ npm install
+    
+    $ quasar build    
 
 Current Features:
 -----------------
