@@ -2,7 +2,7 @@
   <q-layout-header>
     <q-toolbar>
       <q-toolbar-title class="text-center">
-        Sber-Tech test task.
+        Прототип чата с посетителем сайта
         <div slot="subtitle">
           Чат работает в режиме {{
             chatModeSelected === 'admin' ? 'администратора' : 'пользователя'

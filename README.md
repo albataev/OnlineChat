@@ -4,7 +4,7 @@ WebSocket Chat Implementation for Node
 
 Overview
 --------
-This is a simple chat for the website. 
+This is a prototype chat for the website. 
 
 Each client has its own chat.
 Administrator can personally answer for each one of them.
